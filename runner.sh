@@ -1,6 +1,6 @@
 #!/bin/bash
 
-mem_generator="mem_parser.py"
+mem_generator="PATH_TO/mem_parser.py"
 mem_runner="python $mem_generator"
 time_and_date='date -u'
 
