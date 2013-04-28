@@ -47,6 +47,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) < 2:
         print "Usage: ./cpu_parser.py out_file time"
+        sys.exit(1)
 
     total_cpu_load, cpu_list = read_cpu_file()
     endl = '\n'

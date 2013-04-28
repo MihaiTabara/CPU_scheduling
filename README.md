@@ -5,9 +5,8 @@ Team members:
 * Tabara Mihai
 * Vatamanu Daniela
 
+The runner.sh script collects the CPU and memory load data every 5 seconds.
+Usage: ./runner.sh out_memory_file out_cpu_file
 
-To have the scheduler run data do the followings:
-
-1. Run 'crontab -e'
-2. Add '* * * * * path_to_runner.sh path_to_mem_output_file'
-3. Save and close the file
+[IMPORTANT]:
+  * For this project we keep load data file in the stats folder
