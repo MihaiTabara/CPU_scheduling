@@ -8,9 +8,9 @@ mem_load_arg="mem_load"
 cpu_load_arg="cpu_load"
 
 print_to_file_memory_stats() {
-  eval $time_and_date >> $1
-  eval $mem_runner >> $1
-  echo "" >> $1
+  data=`eval $time_and_date`
+  info=`eval $mem_runner`
+  echo "$data $info" >> $1
 }
 
 if [ $# -eq 1 ]
