@@ -61,13 +61,13 @@ class util:
         min_range = 9999999999
         for line in lines[2:]:
             [x, y] = line.rsplit()
-            if (int(y) < min_range):
-                min_range = int(y)
-            if (int(y) > max_range) :
-                max_range = int(y)
-            X.append(int(x))
+            if (float(y) < min_range):
+                min_range = float(y)
+            if (float(y) > max_range) :
+                max_range =float(y)
+            X.append(float(x))
             #Y.append(int(y))
-            Y.append(int(y))
+            Y.append(float(y))
             Y_int.append(y)
 
         return X, Y, Y_int, title, min_range, max_range
