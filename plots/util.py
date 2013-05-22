@@ -33,7 +33,7 @@ class util:
         fd.close()
 
     @staticmethod
-    def read_stat_file(filename):
+    def read_stat_file(filename, no_of_lines=-1):
         """
             Method that reads prediction data
             @Ret value: X = [x1, x2, ..]
@@ -59,7 +59,11 @@ class util:
         # Read (x, y) pairs
         max_range = -100
         min_range = 9999999999
+        index = 0
         for line in lines[2:]:
+            index = index + 1
+            if index > int(no_of_lines):
+                break
             [x, y] = line.rsplit()
             if (float(y) < min_range):
                 min_range = float(y)
@@ -73,7 +77,7 @@ class util:
         return X, Y, Y_int, title, min_range, max_range
 
     @staticmethod
-    def printGoogleCharts(X, Y, title, min_y, max_y):
+    def printGoogleCharts(X, Y, title, min_y, max_y, output):
 
         # Create a chart object of 750x400 pixels
         chart = SimpleLineChart(750, 400)
@@ -83,42 +87,45 @@ class util:
 
         # Assign the labels to the pie data
 #        chart.set_axis_labels(Axis.BOTTOM, X)
-        chart.set_axis_labels(Axis.LEFT, range(min_y, max_y, 5))
+        chart.set_axis_labels(Axis.LEFT, range(int(min_y)-1, int(max_y)+1, 5))
         chart.set_title(title)
 
         # Print the chart URL
         print chart.get_url()
 
         # Download the chart
-        chart.download(title+".png")
+        chart.download(output+".png")
 
     @staticmethod
-    def printMathplotlibCharts(X, Y, title, min_y, max_y):
+    def printMathplotlibCharts(X, Y, title, min_y, max_y, output):
         # Create the plot
         plt.plot(X, Y)
         plt.suptitle(title)
 
         # Save the figure in a separate file
-        plt.savefig(title+".png")
+        plt.savefig(output+".png")
 
     @staticmethod
-    def create_chart(filename, type):
-        X, Y, Y_int, title, min_y, max_y = util.read_stat_file(filename)
+    def create_chart(filename, type, output, no_of_lines=-1):
+        X, Y, Y_int, title, min_y, max_y = util.read_stat_file(filename,
+                no_of_lines)
         if type == 1:
-            util.printGoogleCharts(X, Y, title, min_y, min_y)
+            util.printGoogleCharts(X, Y, title, min_y, min_y, output)
         else:
-            util.printMathplotlibCharts(X, Y, title, min_y, min_y)
-
-
+            util.printMathplotlibCharts(X, Y, title, min_y, min_y, output)
 
 if __name__ == '__main__':
     print "Saving charts"
 
-
-    if len(sys.argv) < 3:
-        print "Usage: ./plotting in_filename type\nType: 1 - google_chart\n      2 - mathplotlib chart"
+    if len(sys.argv) < 4:
+        print "Usage: ./plotting in_filename type output_file [number_of_lines]\nType: 1 - google_chart\n      2 - mathplotlib chart"
         exit(1)
 
-    util.create_chart(sys.argv[1], int(sys.argv[2]))
+    if len(sys.argv) == 4:
+        util.create_chart(sys.argv[1], int(sys.argv[2]), sys.argv[3])
+    else:
+        util.create_chart(sys.argv[1], int(sys.argv[2]), sys.argv[3],
+                sys.argv[4])
+
 
 
