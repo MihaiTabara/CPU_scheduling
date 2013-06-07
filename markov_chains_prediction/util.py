@@ -18,13 +18,13 @@ class Reader:
             raw_values - vector with computed
                         diffs
             time_values - time_vector
-            min_value/max_value - extreme values from files
+            min_val/max_val - extreme values from files
     """
 
     def __init__(self, filename, f_type, percent):
-        self.f_type = type
+        self.f_type = f_type
         self.filename = filename
-        self.percentage = percent
+        self.percentage = float(percent)
 
     def read_file(self, filename=None):
 
@@ -52,7 +52,7 @@ class Reader:
 
         for val in values[1:]:
             if self.f_type == Constants.MEM_FILE:
-                current_value = val.rsplit()[-1]
+                current_value = float(val.rsplit()[-1])
             else:
                 aux = val.rsplit()[1:4]
                 current_value = float(aux[0]) + float(aux [1])+ float(aux[2]) 
@@ -75,39 +75,60 @@ class SimpleMarkovChains:
         self.trans_matrix = []
         self.state = []
 
+        self.encode_states()
+
         """
             Transition matrix is the matrix that states the
             probability for the system to switch from state i
             to state j
             Gathered through sampling
         """
-        for i in range(0,self.r.max_value + 1):
+
+        for i in range(0,len(self.state_mapping)):
             aux = []
-            for j in range(0,self.r.max_value + 1):
+            for j in range(0, len(self.state_mapping)):
                 aux.append(float(0))
             self.trans_matrix.append(aux)
 
-        for i in range(0, self.r.max_value + 1):
-            self.state.append(0)
+        for i in range(0, len(self.state_mapping)):
+            self.state.append(0.0)
 
-    def train_states(self, percent=None):
+    def encode_states(self):
+        self.state_mapping = {}
+
+        for el in self.r.raw_values:
+            if el in self.state_mapping.values():
+                continue
+            else:
+                value = len(self.state_mapping)
+                self.state_mapping[value] = el
+
+    def get_dict_key_for_value(self, value):
+        for key in self.state_mapping.keys():
+            if self.state_mapping[key] == value:
+                return key
+        return -1
+
+    def train_states(self, percent):
 
         if not percent:
-            self.max_index = self.r.percent*len(self.r.raw_values)/100
+            self.max_index = int(self.r.percentage*len(self.r.raw_values)/100)
         else:
-            self.max_index = percent*len(self.r.raw_values)/100
+            self.max_index = int(percent*len(self.r.raw_values)/100)
 
-        self.state[self.r.raw_values[0]] += 1
+        self.state[self.get_dict_key_for_value(self.r.raw_values[0])] += 1
 
         for i in range(1,self.max_index):
             prev = self.r.raw_values[i-1]
             cur = self.r.raw_values[i]
-            self.state[cur] += 1
-            self.trans_matrix[prev][cur] += 1
+            i_ind = self.get_dict_key_for_value(cur)
+            j_ind = self.get_dict_key_for_value(prev)
+            self.state[i_ind] += 1
+            self.trans_matrix[j_ind][i_ind] += 1
 
         for i in range(0,len(self.trans_matrix)):
             for j in range(0, len(self.trans_matrix)):
-                self.trans_matrix[i][j] = self.trans_matrix[i][i] / self.max_index
+                self.trans_matrix[i][j] /= self.max_index
 
         for i in range(0, len(self.state)):
             self.state[i] /= self.max_index
@@ -117,12 +138,9 @@ class SimpleMarkovChains:
 
         result = []
 
-        for i in range(0, self.r.min_val):
-            result.append(0)
-
-        for i in range(self.r.min_val, self.r.max_val+1):
+        for i in range(0, len(self.trans_matrix)):
             value = 0
-            for j in range(self.r.min_value, self.r.max_value+1):
+            for j in range(0, len(self.trans_matrix)):
                 value += curent_state[j]*trans_matrix[j][i]
             result.append(value)
 
@@ -133,29 +151,77 @@ class SimpleMarkovChains:
         """
         # Update current_state
         self.state[value] += 1
+        # TODO - update state matrix also: state[i] = state[i] * number /number + 1
 
         # Update transition matrix
-        for i in range(self.r.min_value, self.r.max_value + 1):
-            for j in range(self.r.min_value, self.r.max_value + 1):
+        for i in range(0, len(self.trans_matrix)):
+            for j in range(0, len(self.trans_matrix)):
                 aux = self.trans_matrix[i][j]
                 if j == value:
                     self.trans_matrix[i][j] = (aux * self.max_index + 1)/ (self.max_index + 1)
                 else:
                     self.trans_matrix[i][j] = (aux * self.max_index)/(self.max_index + 1)
 
+
         self.max_index += 1
 
+    def get_predicted_value(self, result):
+
+        mapping = [0]
+        j = 0
+        for i in range(0, len(self.trans_matrix)):
+            if result[i] == 0:
+                mapping.append(mapping[j]+0.00000000000000001)
+            else:
+                mapping.append(mapping[j]+result[i])
+            j += 1
+
+        rand_number = random.uniform(0, mapping[-1])
+
+        # Search result in mapping
+        from util import search_float
+        return search_float(rand_number, mapping)
+
     def predict(self, no_of_steps, percentage=None):
-        self.train_states()
+        self.train_states(percentage)
 
         for i in range(0, no_of_steps):
             result = self.get_next_state(self.state, self.trans_matrix)
-            # TODO Map results to intervals
-            # Be carefull at the following scenario:
-            # [ 0 0 0 0 13 1 13 1 13 42 ]
-            value = 23242
+            # Map results to intervals
+            value = self.get_predicted_value(result)
+            import pdb; pdb.set_trace()
+            print self.state_mapping[value]
             # Update current state
             self.update_current_state(value)
+
+#@staticmethod
+def search_float(value, where, start=None, finish=None):
+
+    if not start:
+        left = 0
+    else:
+        left = start
+    if not finish:
+        right = len(where)
+    else:
+        right = finish
+    if value == 0:
+        return start
+    while 1:
+        if right <= left:
+            return -1
+        index = (left+right)/2
+        if value > where[index - 1] and value <= where[index]:
+            return index - 1
+        if value > where[index] and value <= where[index + 1]:
+            return index
+        if value == where[index]:
+            return index - 1
+        if (value < where[index]):
+            right = index - 1
+        if (value > where[index]):
+            left = index + 1
+
 
 if __name__ == '__main__':
     print "starting...\n"
@@ -165,9 +231,16 @@ if __name__ == '__main__':
         exit(1)
 
     if 'cpu' in sys.argv[1]:
-        my_r = Reader(sys.argv[1], Constants.CPU_FILE, percent)
+        reader = Reader(sys.argv[1], Constants.CPU_FILE, sys.argv[2])
     elif 'mem' in sys.argv[1]:
-        my_r = Reader(sys.argv[1], Constants.MEM_FILE, percent)
+        reader = Reader(sys.argv[1], Constants.MEM_FILE, sys.argv[2])
 
-    my_r.read_file()
+    reader.read_file()
+    mc = SimpleMarkovChains(reader)
+    mc.predict(3)
+
+    #import pdb; pdb.set_trace()
+    #ema = [0, 1, 54, 76, 80, 100]
+    #index = search_float(64, ema )
+    #import pdb; pdb.set_trace()
 
