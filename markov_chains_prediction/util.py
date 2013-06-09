@@ -70,12 +70,19 @@ class Reader:
 
 class SimpleMarkovChains:
 
-    def __init__(self, reader):
+    def __init__(self, reader, percent=None):
         self.r = reader
         self.trans_matrix = []
         self.state = []
 
         self.encode_states()
+
+        if not percent:
+            self.max_index = int(self.r.percentage*len(self.r.raw_values)/100)
+        else:
+            self.max_index = int(percent*len(self.r.raw_values)/100)
+
+        self.test_chunk_size = len(self.r.raw_values) - self.max_index 
 
         """
             Transition matrix is the matrix that states the
@@ -111,10 +118,12 @@ class SimpleMarkovChains:
 
     def train_states(self, percent):
 
-        if not percent:
-            self.max_index = int(self.r.percentage*len(self.r.raw_values)/100)
-        else:
-            self.max_index = int(percent*len(self.r.raw_values)/100)
+        #if not percent:
+        #    self.max_index = int(self.r.percentage*len(self.r.raw_values)/100)
+        #else:
+        #    self.max_index = int(percent*len(self.r.raw_values)/100)
+
+        #self.test_chunk_size = len(self.r.raw_values) - self.max_index
 
         self.state[self.get_dict_key_for_value(self.r.raw_values[0])] += 1
 
@@ -150,8 +159,11 @@ class SimpleMarkovChains:
         """
         """
         # Update current_state
-        self.state[value] += 1
-        # TODO - update state matrix also: state[i] = state[i] * number /number + 1
+        for i in range(0, len(self.state)):
+            if self.state[i] == value:
+                self.state[i] = (self.state[i]*self.max_index + 1)/ (self.max_index+1)
+            else:
+                self.state[i] = (self.state[i]* self.max_index) / (self.max_index + 1)
 
         # Update transition matrix
         for i in range(0, len(self.trans_matrix)):
@@ -189,8 +201,8 @@ class SimpleMarkovChains:
             result = self.get_next_state(self.state, self.trans_matrix)
             # Map results to intervals
             value = self.get_predicted_value(result)
-            import pdb; pdb.set_trace()
-            print self.state_mapping[value]
+            print "%s\t%s"%(self.r.time_values[self.max_index+1],
+                    self.state_mapping[value])
             # Update current state
             self.update_current_state(value)
 
@@ -222,9 +234,38 @@ def search_float(value, where, start=None, finish=None):
         if (value > where[index]):
             left = index + 1
 
+def read_stat_file(filename, no_of_lines=-1):
+        """
+            Method that reads prediction data
+                        Y = [y1, y2, ..]
+        """
+        # Y - Y axis of the chart
+        Y = []
+
+        fd = open(filename, "r")
+        lines = fd.readlines()
+        fd.close()
+
+        # Read (x, y) pairs
+        index = 0
+        for line in lines[2:]:
+            index = index + 1
+            [x, y] = line.rsplit()
+            #Y.append(int(y))
+            Y.append(float(y))
+
+        return Y
+
+def compare_results(result_vector, real_vector, percentage):
+
+    start_index = int(percentage*len(real_vector)/100) + 1
+    i = 0
+
+    for j in range (start_index, len(real_vector)):
+        print result_vector[i] - real_vector[j]
+        i += 1
 
 if __name__ == '__main__':
-    print "starting...\n"
 
     if len(sys.argv) < 3:
         print "Usage: %s in_file percent" %sys.argv[0]
@@ -232,12 +273,16 @@ if __name__ == '__main__':
 
     if 'cpu' in sys.argv[1]:
         reader = Reader(sys.argv[1], Constants.CPU_FILE, sys.argv[2])
+        print 12
+        print "Markov Chains - CPU file %s train_set"%sys.argv[2]
     elif 'mem' in sys.argv[1]:
         reader = Reader(sys.argv[1], Constants.MEM_FILE, sys.argv[2])
+        print 12
+        print "Markov Chains - Memory file %s train_set"%sys.argv[2]
 
     reader.read_file()
     mc = SimpleMarkovChains(reader)
-    mc.predict(3)
+    mc.predict(mc.test_chunk_size)
 
     #import pdb; pdb.set_trace()
     #ema = [0, 1, 54, 76, 80, 100]
