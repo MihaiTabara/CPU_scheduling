@@ -69,7 +69,8 @@ class util:
                 min_range = float(y)
             if (float(y) > max_range) :
                 max_range =float(y)
-            X.append(float(x))
+            #X.append(float(x))
+            X.append(float(index))
             #Y.append(int(y))
             Y.append(float(y))
             Y_int.append(y)
