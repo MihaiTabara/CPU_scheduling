@@ -285,10 +285,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 4:
         predicted_vector = read_stat_file(sys.argv[3])
         compare_results(predicted_vector, reader.raw_values, float(sys.argv[2]), reader.time_values)
-    #mc.predict(mc.test_chunk_size)
-
-    #import pdb; pdb.set_trace()
-    #ema = [0, 1, 54, 76, 80, 100]
-    #index = search_float(64, ema )
-    #import pdb; pdb.set_trace()
-
+    else:
+        mc.predict(mc.test_chunk_size)
