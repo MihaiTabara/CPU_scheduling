@@ -234,7 +234,7 @@ def search_float(value, where, start=None, finish=None):
         if (value > where[index]):
             left = index + 1
 
-def read_stat_file(filename, no_of_lines=-1):
+def read_stat_file(filename):
         """
             Method that reads prediction data
                         Y = [y1, y2, ..]
@@ -247,42 +247,45 @@ def read_stat_file(filename, no_of_lines=-1):
         fd.close()
 
         # Read (x, y) pairs
-        index = 0
         for line in lines[2:]:
-            index = index + 1
             [x, y] = line.rsplit()
             #Y.append(int(y))
             Y.append(float(y))
 
         return Y
 
-def compare_results(result_vector, real_vector, percentage):
+def compare_results(result_vector, real_vector, percentage, time_values):
 
     start_index = int(percentage*len(real_vector)/100) + 1
     i = 0
 
     for j in range (start_index, len(real_vector)):
-        print result_vector[i] - real_vector[j]
+        print "%s\t%s"%(time_values[j], float(result_vector[i] - real_vector[j]))
         i += 1
 
 if __name__ == '__main__':
 
     if len(sys.argv) < 3:
-        print "Usage: %s in_file percent" %sys.argv[0]
+        print "Usage: %s in_file percent [prediction_file]" %sys.argv[0]
         exit(1)
 
     if 'cpu' in sys.argv[1]:
         reader = Reader(sys.argv[1], Constants.CPU_FILE, sys.argv[2])
         print 12
-        print "Markov Chains - CPU file %s train_set"%sys.argv[2]
+        print "Markov Chains - Error CPU file %s train_set"%sys.argv[2]
     elif 'mem' in sys.argv[1]:
         reader = Reader(sys.argv[1], Constants.MEM_FILE, sys.argv[2])
         print 12
-        print "Markov Chains - Memory file %s train_set"%sys.argv[2]
+        print "Markov Chains - Error Memory file %s train_set"%sys.argv[2]
 
     reader.read_file()
+    #print reader.raw_values
     mc = SimpleMarkovChains(reader)
-    mc.predict(mc.test_chunk_size)
+
+    if len(sys.argv) == 4:
+        predicted_vector = read_stat_file(sys.argv[3])
+        compare_results(predicted_vector, reader.raw_values, float(sys.argv[2]), reader.time_values)
+    #mc.predict(mc.test_chunk_size)
 
     #import pdb; pdb.set_trace()
     #ema = [0, 1, 54, 76, 80, 100]
