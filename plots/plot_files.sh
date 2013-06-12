@@ -25,12 +25,12 @@ function plot_data() {
 # USAGE: ./plot_data input folder, type of chart (google or matplotlib)
 
 # Tendency based predictors
-#plot_data tendency_component/192\.168\.6\.40 2
-#plot_data tendency_component/192\.168\.6\.41 2
-#plot_data tendency_component/192\.168\.6\.42 2
-#plot_data tendency_component/192\.168\.6\.43 2
+plot_data tendency_component/192\.168\.6\.40 2
+plot_data tendency_component/192\.168\.6\.41 2
+plot_data tendency_component/192\.168\.6\.42 2
+plot_data tendency_component/192\.168\.6\.43 2
 
-# TODO - Add the other 2 data sets
+# Markov chain based predictors
 plot_data markov_chains_component/192\.168\.6\.40 2
 plot_data markov_chains_component/192\.168\.6\.41 2
 plot_data markov_chains_component/192\.168\.6\.42 2

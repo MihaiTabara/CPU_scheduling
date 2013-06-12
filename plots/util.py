@@ -62,8 +62,8 @@ class util:
         index = 0
         for line in lines[2:]:
             index = index + 1
-            if index > int(no_of_lines):
-                break
+            #if index > int(no_of_lines):
+            #    break
             [x, y] = line.rsplit()
             if (float(y) < min_range):
                 min_range = float(y)

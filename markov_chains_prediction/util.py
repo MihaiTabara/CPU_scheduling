@@ -58,7 +58,10 @@ class Reader:
                 current_value = float(aux[0]) + float(aux [1])+ float(aux[2]) 
 
             self.time_values.append(val.rsplit()[0].rsplit('_')[-1])
-            aux = float(current_value - init_value)
+            if self.f_type == Constants.MEM_FILE:
+                aux = float(current_value)
+            else:
+                aux = float(current_value - init_value)
             self.raw_values.append(aux)
 
             if self.min_val > aux:
@@ -258,6 +261,8 @@ def compare_results(result_vector, real_vector, percentage, time_values):
 
     start_index = int(percentage*len(real_vector)/100) + 1
     i = 0
+
+    print start_index
 
     for j in range (start_index, len(real_vector)):
         print "%s\t%s"%(time_values[j], float(result_vector[i] - real_vector[j]))
